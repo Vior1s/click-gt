@@ -180,18 +180,14 @@ function %(complete_func)s;
 COMP_CWORD=(commandline -t) %(prog_name)s);
 
     for completion in $response;
-        set -l metadata (string split \n $completion);
+        set -l metadata (string split "," $completion);
 
         if test $metadata[1] = "dir";
             __fish_complete_directories $metadata[2];
         else if test $metadata[1] = "file";
             __fish_complete_path $metadata[2];
         else if test $metadata[1] = "plain";
-            if test $metadata[3] != "_";
-                echo $metadata[2]\t$metadata[3];
-            else;
-                echo $metadata[2];
-            end;
+            echo $metadata[2];
         end;
     end;
 end;
@@ -421,19 +417,10 @@ class FishComplete(ShellComplete):
         return args, incomplete
 
     def format_completion(self, item: CompletionItem) -> str:
-        """Format completion item for Fish shell.
+        if item.help:
+            return f"{item.type},{item.value}\t{item.help}"
 
-        Escapes newlines in both value and help text to prevent
-        Fish shell parsing errors.
-
-        .. versionchanged:: 8.3
-            Escape newlines in help text to fix completion errors
-            with multi-line help strings.
-        """
-        help_ = item.help or "_"
-        value = item.value.replace("\n", r"\n")
-        help_escaped = help_.replace("\n", r"\n")
-        return f"{item.type}\n{value}\n{help_escaped}"
+        return f"{item.type},{item.value}"
 
 
 ShellCompleteType = t.TypeVar("ShellCompleteType", bound="type[ShellComplete]")
