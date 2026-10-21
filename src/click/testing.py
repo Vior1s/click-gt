@@ -116,6 +116,13 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
     def mode(self) -> str:
         return self._mode
 
+    def __next__(self) -> str:  # type: ignore
+        try:
+            line = super().__next__()
+        except StopIteration as e:
+            raise EOFError() from e
+        return line
+
 
 def make_input_stream(
     input: str | bytes | t.IO[t.Any] | None, charset: str
@@ -341,10 +348,7 @@ class CliRunner:
         @_pause_echo(echo_input)  # type: ignore
         def visible_input(prompt: str | None = None) -> str:
             sys.stdout.write(prompt or "")
-            try:
-                val = next(text_input).rstrip("\r\n")
-            except StopIteration as e:
-                raise EOFError() from e
+            val = next(text_input).rstrip("\r\n")
             sys.stdout.write(f"{val}\n")
             sys.stdout.flush()
             return val
@@ -353,10 +357,7 @@ class CliRunner:
         def hidden_input(prompt: str | None = None) -> str:
             sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
-            try:
-                return next(text_input).rstrip("\r\n")
-            except StopIteration as e:
-                raise EOFError() from e
+            return next(text_input).rstrip("\r\n")
 
         @_pause_echo(echo_input)  # type: ignore
         def _getchar(echo: bool) -> str:
